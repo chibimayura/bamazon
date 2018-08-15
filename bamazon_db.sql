@@ -21,8 +21,8 @@ VALUES
 	(03, "Phone Charger compatiable with android and iphone", "Cellphone accessories", 20.99, 50),
 	(04, "All My Friends Are Dead", "Books", 8.96, 1250),
 	(05, "Universal Organic Vegan Gluten-Free BPA-Free Cruelty-Free Manual Toothbrush", "Oral Hygiene", 20.99, 3000),
-	(06, "Liver", "Organ", 557100.00, 1),
+	(06, "Liver", "Organ", 557100.00, 6),
 	(07, "Life-sized Magikarp", "Toys", 800.99, 20),
-	(08, "Mansion-sized Mattress", "Furniture", 5561.89, 3),
+	(08, "Mansion-sized Mattress", "Furniture", 5561.89, 15),
 	(09, "Perfect Blue", "Movies", 12.99, 10000),
-	(10, "Bionic Leg", "Robotics", 70000.99, 39);
+	(10, "Bionic Right Leg", "Robotics", 70000.99, 39);
