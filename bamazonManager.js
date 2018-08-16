@@ -22,6 +22,7 @@ connection.connect(function(err){
 	}
 });
 
+//allows manager to check inventory, add inventory, add new item, or exit program
 function runBamazonMenu(){
 	inquirer.prompt([
 		{
@@ -31,7 +32,7 @@ function runBamazonMenu(){
 			choices: ["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product", "Exit"]
 		}
 	]).then(function(data){
-		switch(data){
+		switch(data.menu){
 			case "View Products for Sale":
 				viewSales();
 				break;
@@ -55,20 +56,163 @@ function runBamazonMenu(){
 	});
 }
 
+//allows manager to continue working on the inventory without having to rerun the program if they want to execute another action
+function backToMenu(){
+	inquirer.prompt([
+		{
+			type: "confirm",
+			name: "confirm",
+			message: "Would you like to exit the program?",
+			default: false
+		}
+	]).then(function(data){
+		if(!data.confirm){
+			runBamazonMenu();
+		}else {
+			connection.end();
+		}
+	});
+}
+
 function viewSales(){
-	
+	connection.query("SELECT * FROM products", function(err, inventory){
+		for(var i = 0; i < inventory.length; i++){
+			var product = inventory[i];
+			console.log("item_id: " + product.item_id + "\nName: " + product.product_name + "\nDepartment: " + product.department_name + "\nPrice: $" + product.price + "\nQuauntity: " + product.stock_quantity + "\n");
+		}
+
+		backToMenu();
+	});
 }
 
 function viewLowInventory(){
+	connection.query("SELECT * FROM products", function(err, inventory){
+		console.log("Products that should be ordered: ");
 
+		for(var i = 0; i < inventory.length; i++){
+			var product = inventory[i];
+			if(product.stock_quantity <= 5){
+				console.log("item_id: " + product.item_id + "\nName: " + product.product_name + "\nDepartment: " + product.department_name + "\nPrice: $" + product.price + "\nQuauntity: " + product.stock_quantity + "\n");
+			}
+		}
+
+		backToMenu();
+	});
 }
 
 function addToInventory(){
+	connection.query("SELECT * FROM products", function(err, inventory){
+		inquirer.prompt([
+			{
+				type: "input",
+				name: "id",
+				message: "Enter the item id you would like to add more quantity to:"
+			},
+			{
+				type: "input",
+				name: "quantity",
+				message: "How much more would you like to add?"
+			}
+		]).then(function(data){
+			var updatedQuantity;
+			var hasItem; //stores inventory position
 
+			for(var i = 0; i < inventory.length; i++){
+				if(data.id == inventory[i].item_id){
+               hasItem = true;
+					updatedQuantity = data.quantity + inventory[i].stock_quantity;
+               break; //does not allow i to increase one more time to prevent the error when purchasing the last item on the list
+				} else{
+               hasItem = false;
+            }
+			}
+
+         //if have item on list
+         if(hasItem){
+            connection.query("UPDATE products SET stock_quantity = " + updatedQuantity + " WHERE item_id = " + data.id, function(err){
+               console.log("\n***Your inventory has been updated***\n");
+               backToMenu();
+            });
+         }else {
+				console.log("You cannot stock something you don't carry yet. Please select the 'Add New Product' to add that item in.");
+            runBamazonMenu();
+			}
+		});
+	});
 }
 
 function addNewProduct(){
+   inquirer.prompt([
+      {
+         type: "input",
+         name: "item_id",
+         message: "Enter the item id(number): "
+      },
+      {
+         type: "input",
+         name: "product_name",
+         message: "Enter the product name: "
+      },
+      {
+         type: "input",
+         name: "department_name",
+         message: "Enter the department_name: "
+      },
+      {
+         type: "input",
+         name: "price",
+         message: "Enter the price(number): "
+      },
+      {
+         type: "input",
+         name: "stock_quantity",
+         message: "Enter the stock quantity(number): "
+      }
+   ]).then(function(data){
+      //checks to make sure the item does not exist in the database
+      connection.query("SELECT * FROM products", function(err, inventory){
+         var hasItem = true; //checks to see if inventory list has ended
+         for(var i = 0; i < inventory.length; i++){
 
+            //if item exist it will return to the main menu
+            if(data.item_id == inventory[i].item_id){
+               console.log("You already sell that item. If you would like to update the stock quantity please select 'Add To Inventory in the menu'.");
+               runBamazonMenu();
+               break;
+            }else {
+               hasItem = false;
+            }
+         }
+
+         //If it doesn't exist it will add the item into the database
+         if(!hasItem){
+            //Can only add the item if the item_id, price, and stock_quantity are numbers
+            if(typeof parseInt(data.item_id) == "number" && typeof parseFloat(data.price) == "number" && typeof parseInt(data.stock_quantity) == "number"){
+               var query = connection.query("INSERT INTO products SET ?", {
+                  item_id: data.item_id,
+                  product_name: data.product_name,
+                  department_name: data.department_name,
+                  price: data.price,
+                  stock_quantity: data.stock_quantity
+               },
+               function(err, res){
+                  if(err) throw err;
+
+                  console.log("Product has been added!\n");
+                  checkItem = false;
+                  backToMenu();
+               });
+
+               console.log(query.sql); //checking for errors
+
+            }else {
+               console.log("Error! Invalid information. Please reenter your information in the correct format.");
+               checkItem = false;
+               addNewProduct();
+            }
+         }
+      });
+   });
 }
 
 function closeConnection(){
