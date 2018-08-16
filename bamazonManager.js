@@ -1,6 +1,9 @@
 var inquirer = require("inquirer");
 var mysql = require("mysql");
 
+var Table = require('cli-table');
+var table;
+
 var sqlPW = "password"; //contains password used to connect to mysql
 
 var connection = mysql.createConnection({
@@ -76,11 +79,16 @@ function backToMenu(){
 
 function viewSales(){
 	connection.query("SELECT * FROM products", function(err, inventory){
+
+		createTable();
+
 		for(var i = 0; i < inventory.length; i++){
 			var product = inventory[i];
-			console.log("item_id: " + product.item_id + "\nName: " + product.product_name + "\nDepartment: " + product.department_name + "\nPrice: $" + product.price + "\nQuauntity: " + product.stock_quantity + "\n");
-		}
 
+			table.push([product.item_id, product.product_name, product.department_name, "$" + product.price, product.stock_quantity]);
+		}
+		
+		console.log(table.toString());
 		backToMenu();
 	});
 }
@@ -89,13 +97,16 @@ function viewLowInventory(){
 	connection.query("SELECT * FROM products", function(err, inventory){
 		console.log("Products that should be ordered: ");
 
+		createTable();
+
 		for(var i = 0; i < inventory.length; i++){
 			var product = inventory[i];
-			if(product.stock_quantity <= 5){
-				console.log("item_id: " + product.item_id + "\nName: " + product.product_name + "\nDepartment: " + product.department_name + "\nPrice: $" + product.price + "\nQuauntity: " + product.stock_quantity + "\n");
+			if(parseInt(product.stock_quantity) <= 5){
+				table.push([product.item_id, product.product_name, product.department_name, "$" + product.price, product.stock_quantity]);
 			}
 		}
 
+		console.log(table.toString());
 		backToMenu();
 	});
 }
@@ -120,7 +131,7 @@ function addToInventory(){
 			for(var i = 0; i < inventory.length; i++){
 				if(data.id == inventory[i].item_id){
                hasItem = true;
-					updatedQuantity = data.quantity + inventory[i].stock_quantity;
+					updatedQuantity = parseInt(data.quantity) + parseInt(inventory[i].stock_quantity);
                break; //does not allow i to increase one more time to prevent the error when purchasing the last item on the list
 				} else{
                hasItem = false;
@@ -217,4 +228,10 @@ function addNewProduct(){
 
 function closeConnection(){
 	connection.end();
+}
+
+//creates a new table to display the inventory
+function createTable(){
+	table = new Table({ chars: {'mid': '-', 'left-mid': '-', 'mid-mid': '-', 'right-mid': '-'} });
+	table.push(["Item ID", "Product Name", "Department Name", "Price", "Quantity"]);
 }

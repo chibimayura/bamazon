@@ -1,6 +1,9 @@
 var inquirer = require("inquirer");
 var mysql = require("mysql");
 
+var Table = require('cli-table');
+var table = new Table({ chars: {'mid': '-', 'left-mid': '-', 'mid-mid': '-', 'right-mid': '-'} });
+
 var sqlPW = "password"; //contains password used to connect to mysql
 
 var connection = mysql.createConnection({
@@ -24,11 +27,18 @@ connection.connect(function(err){
 
 function runBamazonMenu(){
 	connection.query("SELECT * FROM products", function(err, inventory){
+      //displays products for sale
+      table.push(["Item ID", "Product Name", "Price"]);
 		for(var i = 0; i < inventory.length; i++){
 			var product = inventory[i];
-			console.log(`ID: ${product.item_id} Price: $${product.price} Name: ${product.product_name}`);
+
+         table.push([product.item_id, product.product_name, "$" + product.price]);
 		}
+
+      console.log(table.toString());
 		console.log("Welcome to Bamazon where everything we sell is legal.");
+
+      //ask user what they would like to purchase and how much they would like to buy
 		inquirer.prompt([
 			{
 				type: "input",
@@ -44,16 +54,21 @@ function runBamazonMenu(){
 			var hasItem; //to track position of the inventory list
 			var total;
 			var currentQuantity;
-			for(var i = 0; i < inventory.length; i++){
+			var i; //current position of the inventory
+			var totalSales;
+
+			for(i = 0; i < inventory.length; i++){
 				if(data.id == inventory[i].item_id){
 					//checks stock of item
-					if(data.quantity > inventory[i].stock_quantity){
+					if(parseInt(data.quantity) > parseInt(inventory[i].stock_quantity)){
    						console.log("Your order has been cancelled due to insufficient stock. Please check in another time.");
+                     hasItem = true;
    						connection.end();
    					}else {
-   						total = parseFloat(data.quantity * inventory[i].price).toFixed(2);
+   						total = parseFloat(parseInt(data.quantity) * parseFloat(inventory[i].price)).toFixed(2);
    						currentQuantity = parseInt(inventory[i].stock_quantity) - parseInt(data.quantity);
    						hasItem = true;
+                     totalSales = parseInt(data.quantity) + parseInt(inventory[i].product_sales);
                      
    						break; //ends the loop
    					}
@@ -64,10 +79,13 @@ function runBamazonMenu(){
 
 			//checks to see if item is available
 			if(hasItem){
-				connection.query("UPDATE products SET stock_quantity = " + currentQuantity + " WHERE item_id = " + data.id, function(err){
+
+				//updates the quantity left in inventory
+				connection.query("UPDATE products SET stock_quantity = " + currentQuantity + ",product_sales = " + totalSales + " WHERE item_id = " + data.id, function(err){
 					if(!err){
-						console.log("You have purchased " + data.quantity + " of " + inventory[i].product_name + ".Your total comes to $" + total + ". Thank you for your purchase!");
-						connection.end();
+						//updates product_sales column that shows how many times the item has been purchased
+						console.log("\nYou have purchased " + data.quantity + " of " + inventory[i].product_name + ".Your total comes to $" + total + ". Thank you for your purchase!");
+                  connection.end();
 					}
 				});
 			} else{

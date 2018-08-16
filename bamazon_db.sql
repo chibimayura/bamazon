@@ -11,8 +11,17 @@ CREATE TABLE products(
 	department_name VARCHAR(255) NOT NULL,
 	price DECIMAL(10,2) NOT NULL,
 	stock_quantity INT(10) NOT NULL,
-	product_sales INT(10) NOT NULL DEFAULT 0
+	product_sales INT(10) NOT NULL DEFAULT 0,
 	PRIMARY KEY (id)
+);
+
+CREATE TABLE departments(
+	id INT NOT NULL AUTO_INCREMENT,
+	department_id INT NOT NULL,
+	department_name VARCHAR(255) NOT NULL,
+	over_head_costs DECIMAL(10,2) DEFAULT 0,
+	PRIMARY KEY (id),
+	FOREIGN KEY (department_name) REFERENCES products(department_name) 	
 );
 
 INSERT INTO products (item_id, product_name, department_name, price, stock_quantity)
