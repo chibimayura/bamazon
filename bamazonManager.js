@@ -128,25 +128,30 @@ function addToInventory(){
 			var updatedQuantity;
 			var hasItem; //stores inventory position
 
-			for(var i = 0; i < inventory.length; i++){
-				if(parseInt(data.id) == parseInt(inventory[i].item_id)){
-		            hasItem = true;
-					updatedQuantity = parseInt(data.quantity) + parseInt(inventory[i].stock_quantity);
-					break; //does not allow i to increase one more time to prevent the error when purchasing the last item on the list
-				} else{
-					hasItem = false;
-	            }
-			}
+			if(parseInt(data.quantity).toString() != 'NaN'){
+				for(var i = 0; i < inventory.length; i++){
+					if(parseInt(data.id) == parseInt(inventory[i].item_id)){
+			            hasItem = true;
+						updatedQuantity = parseInt(data.quantity) + parseInt(inventory[i].stock_quantity);
+						break; //does not allow i to increase one more time to prevent the error when purchasing the last item on the list
+					} else{
+						hasItem = false;
+		            }
+				}
 
-         //if have item on list
-         if(hasItem){
-            connection.query("UPDATE products SET stock_quantity = " + updatedQuantity + " WHERE item_id = " + data.id, function(err){
-               console.log("\n***Your inventory has been updated***\n");
-               backToMenu();
-            });
-         }else {
-				console.log("You cannot stock something you don't carry yet. Please select the 'Add New Product' to add that item in.");
-            runBamazonMenu();
+		         //if have item on list
+		         if(hasItem){
+		            connection.query("UPDATE products SET stock_quantity = " + updatedQuantity + " WHERE item_id = " + data.id, function(err){
+		               console.log("\n***Your inventory has been updated***\n");
+		               backToMenu();
+		            });
+		         }else {
+					console.log("\nYou cannot stock something you don't carry yet. Please select the 'Add New Product' to add that item in.\n");
+		            runBamazonMenu();
+				}
+			} else{
+				console.log("\nError! Invalid information. Please reenter your information in the correct format.\n");
+				addToInventory();
 			}
 		});
 	});
@@ -177,11 +182,15 @@ function addNewProduct(){
 			}
 		]).then(function(data){
 			var hasItem; //checks to see if inventory list has ended
-			if(typeof parseFloat(data.price) == "number" && typeof parseInt(data.stock_quantity) == "number"){
+			if(parseFloat(data.price).toString() == 'NaN' || parseInt(data.stock_quantity).toString() == 'NaN')
+			{
+				console.log("\nError! Invalid information. Please reenter your information in the correct format.\n");
+            	addNewProduct();
+			}else {
 				for(var i = 0; i < inventory.length; i++){
 		            //if item exist it will return to the main menu
 		            if(parseInt(data.item_id) == parseInt(inventory[i].item_id)){
-		               console.log("You already sell that item. If you would like to update the stock quantity please select 'Add To Inventory in the menu'.");
+		               console.log("\nYou already sell that item. If you would like to update the stock quantity please select 'Add To Inventory in the menu'.\n");
 		               hasItem = true;
 		               runBamazonMenu();
 		               break;
@@ -208,10 +217,7 @@ function addNewProduct(){
 	                  backToMenu();
 	               });
 		        }
-	        }else {
-               console.log("Error! Invalid information. Please reenter your information in the correct format.");
-               addNewProduct();
-            }
+	        }
 		});
 	});
 }
