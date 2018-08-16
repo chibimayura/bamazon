@@ -15,14 +15,6 @@ CREATE TABLE products(
 	PRIMARY KEY(id)
 );
 
-CREATE TABLE departments(
-	department_id INT NOT NULL AUTO_INCREMENT,
-	department_name VARCHAR(255) NOT NULL,
-	over_head_costs DECIMAL(10,2) NOT NULL DEFAULT 0,
-	PRIMARY KEY (department_id),
-	FOREIGN KEY (department_name) REFERENCES products(department_name) 	
-);
-
 INSERT INTO products (item_id, product_name, department_name, price, stock_quantity)
 VALUES 
 	(01, "Bananas", "Food", 0.69, 1000000),
@@ -36,14 +28,22 @@ VALUES
 	(09, "Perfect Blue", "Movies", 12.99, 10000),
 	(10, "Bionic Right Leg", "Electronics", 70000.99, 39);
 
-INSERT INTO departments (department_name, over_head_costs)
-VALUES
-	("Food", 20),
-	("Camera", 1000),
-	("Electronics", 10),
-	("Books", 4),
-	("Oral Hygiene", 10),
-	("Organ", 10000),
-	("Toys", 400),
-	("Furniture", 2000),
-	("Movies", 6);
+-- CREATE TABLE departments(
+-- 	department_id INT NOT NULL AUTO_INCREMENT,
+-- 	department_name VARCHAR(255) NOT NULL,
+-- 	over_head_costs DECIMAL(10,2) NOT NULL DEFAULT 0,
+-- 	PRIMARY KEY (department_id),
+-- 	FOREIGN KEY (department_name) REFERENCES products(department_name) 	
+-- );
+
+-- INSERT INTO departments (department_name, over_head_costs)
+-- VALUES
+-- 	("Food", 20),
+-- 	("Camera", 1000),
+-- 	("Electronics", 10),
+-- 	("Books", 4),
+-- 	("Oral Hygiene", 10),
+-- 	("Organ", 10000),
+-- 	("Toys", 400),
+-- 	("Furniture", 2000),
+-- 	("Movies", 6);
