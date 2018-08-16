@@ -58,7 +58,7 @@ function runBamazonMenu(){
 			var totalSales;
 
 			for(i = 0; i < inventory.length; i++){
-				if(data.id == inventory[i].item_id){
+				if(parseInt(data.id) == parseInt(inventory[i].item_id)){
 					//checks stock of item
 					if(parseInt(data.quantity) > parseInt(inventory[i].stock_quantity)){
    						console.log("Your order has been cancelled due to insufficient stock. Please check in another time.");

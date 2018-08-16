@@ -129,13 +129,13 @@ function addToInventory(){
 			var hasItem; //stores inventory position
 
 			for(var i = 0; i < inventory.length; i++){
-				if(data.id == inventory[i].item_id){
-               hasItem = true;
+				if(parseInt(data.id) == parseInt(inventory[i].item_id)){
+		            hasItem = true;
 					updatedQuantity = parseInt(data.quantity) + parseInt(inventory[i].stock_quantity);
-               break; //does not allow i to increase one more time to prevent the error when purchasing the last item on the list
+					break; //does not allow i to increase one more time to prevent the error when purchasing the last item on the list
 				} else{
-               hasItem = false;
-            }
+					hasItem = false;
+	            }
 			}
 
          //if have item on list
@@ -153,77 +153,67 @@ function addToInventory(){
 }
 
 function addNewProduct(){
-   inquirer.prompt([
-      {
-         type: "input",
-         name: "item_id",
-         message: "Enter the item id(number): "
-      },
-      {
-         type: "input",
-         name: "product_name",
-         message: "Enter the product name: "
-      },
-      {
-         type: "input",
-         name: "department_name",
-         message: "Enter the department_name: "
-      },
-      {
-         type: "input",
-         name: "price",
-         message: "Enter the price(number): "
-      },
-      {
-         type: "input",
-         name: "stock_quantity",
-         message: "Enter the stock quantity(number): "
-      }
-   ]).then(function(data){
-      //checks to make sure the item does not exist in the database
-      connection.query("SELECT * FROM products", function(err, inventory){
-         var hasItem = true; //checks to see if inventory list has ended
-         for(var i = 0; i < inventory.length; i++){
+	connection.query("SELECT * FROM products", function(err, inventory){
+		inquirer.prompt([
+			{
+				type: "input",
+				name: "product_name",
+				message: "Enter the product name: "
+			},
+			{
+				type: "input",
+				name: "department_name",
+				message: "Enter the department_name: "
+			},
+			{
+				type: "input",
+				name: "price",
+				message: "Enter the price(number): "
+			},
+			{
+				type: "input",
+				name: "stock_quantity",
+				message: "Enter the stock quantity(number): "
+			}
+		]).then(function(data){
+			var hasItem; //checks to see if inventory list has ended
+			if(typeof parseFloat(data.price) == "number" && typeof parseInt(data.stock_quantity) == "number"){
+				for(var i = 0; i < inventory.length; i++){
+		            //if item exist it will return to the main menu
+		            if(parseInt(data.item_id) == parseInt(inventory[i].item_id)){
+		               console.log("You already sell that item. If you would like to update the stock quantity please select 'Add To Inventory in the menu'.");
+		               hasItem = true;
+		               runBamazonMenu();
+		               break;
+		            }else {
+		               hasItem = false;
+		            }
+		        }
 
-            //if item exist it will return to the main menu
-            if(data.item_id == inventory[i].item_id){
-               console.log("You already sell that item. If you would like to update the stock quantity please select 'Add To Inventory in the menu'.");
-               runBamazonMenu();
-               break;
-            }else {
-               hasItem = false;
-            }
-         }
+	         	//If it doesn't exist it will add the item into the database
+	        	if(!hasItem){
+	            //Can only add the item if the item_id, price, and stock_quantity are numbers
+	               connection.query("INSERT INTO products SET ?", {
+	                  item_id: data.item_id,
+	                  product_name: data.product_name,
+	                  department_name: data.department_name,
+	                  price: data.price,
+	                  stock_quantity: data.stock_quantity
+	               },
+	               function(err, res){
+	                  if(err) throw err;
 
-         //If it doesn't exist it will add the item into the database
-         if(!hasItem){
-            //Can only add the item if the item_id, price, and stock_quantity are numbers
-            if(typeof parseInt(data.item_id) == "number" && typeof parseFloat(data.price) == "number" && typeof parseInt(data.stock_quantity) == "number"){
-               var query = connection.query("INSERT INTO products SET ?", {
-                  item_id: data.item_id,
-                  product_name: data.product_name,
-                  department_name: data.department_name,
-                  price: data.price,
-                  stock_quantity: data.stock_quantity
-               },
-               function(err, res){
-                  if(err) throw err;
-
-                  console.log("Product has been added!\n");
-                  checkItem = false;
-                  backToMenu();
-               });
-
-               console.log(query.sql); //checking for errors
-
-            }else {
+	                  console.log("Product has been added!\n");
+	                  hasItem = true;
+	                  backToMenu();
+	               });
+		        }
+	        }else {
                console.log("Error! Invalid information. Please reenter your information in the correct format.");
-               checkItem = false;
                addNewProduct();
             }
-         }
-      });
-   });
+		});
+	});
 }
 
 function closeConnection(){
