@@ -57,41 +57,48 @@ function runBamazonMenu(){
 			var i; //current position of the inventory
 			var totalSales;
 
-			for(i = 0; i < inventory.length; i++){
-				if(data.id == inventory[i].item_id && typeof parseInt(data.quantity) == "number"){
-					//checks stock of item
-					if(parseInt(data.quantity) > parseInt(inventory[i].stock_quantity)){
-   						console.log("Your order has been cancelled due to insufficient stock. Please check in another time.");
-	                     hasItem = true;
-   						connection.end();
-   						break;
-   					}else {
-   						total = parseFloat(parseInt(data.quantity) * parseFloat(inventory[i].price)).toFixed(2);
-   						currentQuantity = parseInt(inventory[i].stock_quantity) - parseInt(data.quantity);
-   						hasItem = true;
-                     totalSales = parseInt(data.quantity) + parseInt(inventory[i].product_sales);
-                     
-   						break; //ends the loop
-   					}
-				} else{
-					hasItem = false;
-				}
-			}
-
-			//checks to see if item is available
-			if(hasItem){
-
-				//updates the quantity left in inventory
-				connection.query("UPDATE products SET stock_quantity = " + currentQuantity + ",product_sales = " + totalSales + " WHERE item_id = " + data.id, function(err){
-					if(!err){
-						//updates product_sales column that shows how many times the item has been purchased
-						console.log("\nYou have purchased " + data.quantity + " of " + inventory[i].product_name + ".Your total comes to $" + total + ". Thank you for your purchase!");
-                  connection.end();
-					}
-				});
-			} else{
-				console.log("Unfortunately we do not carry the item you are looking for. Thank you for shopping at the very legal Bamazon and have a nice day!");
+			//if not a number the program cannot process request and will end connection
+			if(parseInt(data.quantity).toString() == 'NaN'){
+				console.log("Unfortunately we are unable to process your request. Thank you for choosing the very legal Bamazon. Have a nice day!");
 				connection.end();
+			} else{
+				//loops through entire inventory list to check for matching item_id
+				for(i = 0; i < inventory.length; i++){
+					if(data.id == inventory[i].item_id){
+
+						//checks stock of item
+						if(parseInt(data.quantity) > parseInt(inventory[i].stock_quantity)){
+	   						console.log("Your order has been cancelled due to insufficient stock. Please check in another time.");
+		                     hasItem = true;
+	   						connection.end();
+	   						break;
+	   					}else {
+	   						total = parseFloat(parseInt(data.quantity) * parseFloat(inventory[i].price)).toFixed(2);
+	   						currentQuantity = parseInt(inventory[i].stock_quantity) - parseInt(data.quantity);
+	   						hasItem = true;
+	                     totalSales = parseInt(data.quantity) + parseInt(inventory[i].product_sales);
+	                     
+	   						break; //ends the loop
+	   					}
+					} else{
+						hasItem = false;
+					}
+				}
+
+				//add item if available
+				if(hasItem){
+					//updates the quantity left in inventory
+					connection.query("UPDATE products SET stock_quantity = " + currentQuantity + ",product_sales = " + totalSales + " WHERE item_id = " + data.id, function(err){
+						if(!err){
+							//updates product_sales column that shows how many times the item has been purchased
+							console.log("\nYou have purchased " + data.quantity + " of " + inventory[i].product_name + ".Your total comes to $" + total + ". Thank you for your purchase!");
+	                  connection.end();
+						}
+					});
+				} else {
+					console.log("Unfortunately we do not carry the item you are looking for. Thank you for shopping at the very legal Bamazon and have a nice day!");
+					connection.end();
+				}
 			}
 		});
 	});
