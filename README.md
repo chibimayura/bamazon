@@ -2,6 +2,9 @@
 
 Bamazon is an Amazon-like storefront with MySQL and Node. This app will allow customers to make purchases and deplete stock from the store's inventory.
 
+### Purpose of this program
+This program demonstrates my understanding of nodes, npms, and mySQL.
+
 ### Requirements
 
 #### 1. Installation
@@ -28,3 +31,11 @@ Each javascript files will allow different limited commands that the user can do
 To run the program, enter `node bamazonCustomer.js` on the Bash terminal.
 
 ![Image of bamazonCustomer.js](/images/bamazonCustomer.gif)
+
+#### 2. bamazonManager.js
+To run the program, enter `node bamazonManager.js` on the Bash terminal.
+
+![Image of bamazonManager.js](/images/bamazonManager.gif)
+
+#### 3. bamazonSuperviser.js (Work In Progress)
+Under construction
