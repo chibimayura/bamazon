@@ -202,16 +202,16 @@ function addNewProduct(){
 	         	//If it doesn't exist it will add the item into the database
 	        	if(!hasItem){
 	            //Can only add the item if the item_id, price, and stock_quantity are numbers
-	               connection.query("INSERT INTO products SET ?", {
+		            updateDepartmentTable();
+	                connection.query("INSERT INTO products SET ?", {
 	                  item_id: data.item_id,
 	                  product_name: data.product_name,
 	                  department_name: data.department_name,
 	                  price: data.price,
 	                  stock_quantity: data.stock_quantity
 	               },
-	               function(err, res){
+	                function(err, res){
 	                  if(err) throw err;
-
 	                  console.log("Product has been added!\n");
 	                  hasItem = true;
 	                  backToMenu();
@@ -230,4 +230,29 @@ function closeConnection(){
 function createTable(){
 	table = new Table({ chars: {'mid': '-', 'left-mid': '-', 'mid-mid': '-', 'right-mid': '-'} });
 	table.push(["Item ID", "Product Name", "Department Name", "Price", "Quantity"]);
+}
+
+function updateDepartmentTable(){
+	connection.query(
+		"SELECT departments.department_name AS department_name, departments.department_id AS department_id, products.department_id AS products_department_id, products.department_name AS products_department_name FROM departments RIGHT JOIN products ON products.department_name = departments.department_name",
+		function(err, departments){
+			for(var i = 0; i < departments.length; i++){
+				var deparmentLoc = departments[i];
+				if(deparmentLoc.products_department_id.toString() == "NULL"){
+					if(deparmentLoc.department_id.toString() == "NULL" && deparmentLoc.department_name.toString() == "NULL"){
+						connection.query(
+							"INSERT INTO departments SET department_name = " + deparmentLoc.products_department_name ,
+							function(err){
+								connection.query("UPDATE products INNER JOIN departments ON (departments.department_name = products.department_name) SET products.department_id = departments.department_id", function(err){
+									if(err) throw err;
+								});
+						});
+					}else {
+						connection.query("UPDATE products INNER JOIN departments ON (departments.department_name = products.department_name) SET products.department_id = departments.department_id", function(err){
+							if(err) throw err;
+						});
+					}
+				}
+			}
+	});
 }

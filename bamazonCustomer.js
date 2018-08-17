@@ -27,18 +27,18 @@ connection.connect(function(err){
 
 function runBamazonMenu(){
 	connection.query("SELECT * FROM products", function(err, inventory){
-      //displays products for sale
-      table.push(["Item ID", "Product Name", "Price"]);
+        //displays products for sale
+      	table.push(["Item ID", "Product Name", "Price"]);
 		for(var i = 0; i < inventory.length; i++){
 			var product = inventory[i];
 
-         table.push([product.item_id, product.product_name, "$" + product.price]);
+	     table.push([product.item_id, product.product_name, "$" + product.price]);
 		}
 
-      console.log(table.toString());
+      	console.log(table.toString());
 		console.log("Welcome to Bamazon where everything we sell is legal.");
 
-      //ask user what they would like to purchase and how much they would like to buy
+        //ask user what they would like to purchase and how much they would like to buy
 		inquirer.prompt([
 			{
 				type: "input",
@@ -69,14 +69,14 @@ function runBamazonMenu(){
 						//checks stock of item
 						if(parseInt(data.quantity) > parseInt(inventory[i].stock_quantity)){
 	   						console.log("Your order has been cancelled due to insufficient stock. Please check in another time.");
-		                     hasItem = true;
+		                    hasItem = true;
 	   						connection.end();
 	   						break;
 	   					}else {
 	   						total = parseFloat(parseInt(data.quantity) * parseFloat(inventory[i].price)).toFixed(2);
 	   						currentQuantity = parseInt(inventory[i].stock_quantity) - parseInt(data.quantity);
 	   						hasItem = true;
-	                     totalSales = parseInt(data.quantity) + parseInt(inventory[i].product_sales);
+	                     	totalSales = parseInt(data.quantity) + parseInt(inventory[i].product_sales);
 	                     
 	   						break; //ends the loop
 	   					}
