@@ -128,102 +128,98 @@ function addToInventory(){
 			var updatedQuantity;
 			var hasItem; //stores inventory position
 
-			for(var i = 0; i < inventory.length; i++){
-				if(data.id == inventory[i].item_id){
-               hasItem = true;
-					updatedQuantity = parseInt(data.quantity) + parseInt(inventory[i].stock_quantity);
-               break; //does not allow i to increase one more time to prevent the error when purchasing the last item on the list
-				} else{
-               hasItem = false;
-            }
-			}
+			if(parseInt(data.quantity).toString() != 'NaN'){
+				for(var i = 0; i < inventory.length; i++){
+					if(parseInt(data.id) == parseInt(inventory[i].item_id)){
+			            hasItem = true;
+						updatedQuantity = parseInt(data.quantity) + parseInt(inventory[i].stock_quantity);
+						break; //does not allow i to increase one more time to prevent the error when purchasing the last item on the list
+					} else{
+						hasItem = false;
+		            }
+				}
 
-         //if have item on list
-         if(hasItem){
-            connection.query("UPDATE products SET stock_quantity = " + updatedQuantity + " WHERE item_id = " + data.id, function(err){
-               console.log("\n***Your inventory has been updated***\n");
-               backToMenu();
-            });
-         }else {
-				console.log("You cannot stock something you don't carry yet. Please select the 'Add New Product' to add that item in.");
-            runBamazonMenu();
+		         //if have item on list
+		         if(hasItem){
+		            connection.query("UPDATE products SET stock_quantity = " + updatedQuantity + " WHERE item_id = " + data.id, function(err){
+		               console.log("\n***Your inventory has been updated***\n");
+		               backToMenu();
+		            });
+		         }else {
+					console.log("\nYou cannot stock something you don't carry yet. Please select the 'Add New Product' to add that item in.\n");
+		            runBamazonMenu();
+				}
+			} else{
+				console.log("\nError! Invalid information. Please reenter your information in the correct format.\n");
+				addToInventory();
 			}
 		});
 	});
 }
 
 function addNewProduct(){
-   inquirer.prompt([
-      {
-         type: "input",
-         name: "item_id",
-         message: "Enter the item id(number): "
-      },
-      {
-         type: "input",
-         name: "product_name",
-         message: "Enter the product name: "
-      },
-      {
-         type: "input",
-         name: "department_name",
-         message: "Enter the department_name: "
-      },
-      {
-         type: "input",
-         name: "price",
-         message: "Enter the price(number): "
-      },
-      {
-         type: "input",
-         name: "stock_quantity",
-         message: "Enter the stock quantity(number): "
-      }
-   ]).then(function(data){
-      //checks to make sure the item does not exist in the database
-      connection.query("SELECT * FROM products", function(err, inventory){
-         var hasItem = true; //checks to see if inventory list has ended
-         for(var i = 0; i < inventory.length; i++){
+	connection.query("SELECT * FROM products", function(err, inventory){
+		inquirer.prompt([
+			{
+				type: "input",
+				name: "product_name",
+				message: "Enter the product name: "
+			},
+			{
+				type: "input",
+				name: "department_name",
+				message: "Enter the department_name: "
+			},
+			{
+				type: "input",
+				name: "price",
+				message: "Enter the price(number): "
+			},
+			{
+				type: "input",
+				name: "stock_quantity",
+				message: "Enter the stock quantity(number): "
+			}
+		]).then(function(data){
+			var hasItem; //checks to see if inventory list has ended
+			if(parseFloat(data.price).toString() == 'NaN' || parseInt(data.stock_quantity).toString() == 'NaN')
+			{
+				console.log("\nError! Invalid information. Please reenter your information in the correct format.\n");
+            	addNewProduct();
+			}else {
+				for(var i = 0; i < inventory.length; i++){
+		            //if item exist it will return to the main menu
+		            if(parseInt(data.item_id) == parseInt(inventory[i].item_id)){
+		               console.log("\nYou already sell that item. If you would like to update the stock quantity please select 'Add To Inventory in the menu'.\n");
+		               hasItem = true;
+		               runBamazonMenu();
+		               break;
+		            }else {
+		               hasItem = false;
+		            }
+		        }
 
-            //if item exist it will return to the main menu
-            if(data.item_id == inventory[i].item_id){
-               console.log("You already sell that item. If you would like to update the stock quantity please select 'Add To Inventory in the menu'.");
-               runBamazonMenu();
-               break;
-            }else {
-               hasItem = false;
-            }
-         }
-
-         //If it doesn't exist it will add the item into the database
-         if(!hasItem){
-            //Can only add the item if the item_id, price, and stock_quantity are numbers
-            if(typeof parseInt(data.item_id) == "number" && typeof parseFloat(data.price) == "number" && typeof parseInt(data.stock_quantity) == "number"){
-               var query = connection.query("INSERT INTO products SET ?", {
-                  item_id: data.item_id,
-                  product_name: data.product_name,
-                  department_name: data.department_name,
-                  price: data.price,
-                  stock_quantity: data.stock_quantity
-               },
-               function(err, res){
-                  if(err) throw err;
-
-                  console.log("Product has been added!\n");
-                  checkItem = false;
-                  backToMenu();
-               });
-
-               console.log(query.sql); //checking for errors
-
-            }else {
-               console.log("Error! Invalid information. Please reenter your information in the correct format.");
-               checkItem = false;
-               addNewProduct();
-            }
-         }
-      });
-   });
+	         	//If it doesn't exist it will add the item into the database
+	        	if(!hasItem){
+	            //Can only add the item if the item_id, price, and stock_quantity are numbers
+		            updateDepartmentTable();
+	                connection.query("INSERT INTO products SET ?", {
+	                  item_id: data.item_id,
+	                  product_name: data.product_name,
+	                  department_name: data.department_name,
+	                  price: data.price,
+	                  stock_quantity: data.stock_quantity
+	               },
+	                function(err, res){
+	                  if(err) throw err;
+	                  console.log("Product has been added!\n");
+	                  hasItem = true;
+	                  backToMenu();
+	               });
+		        }
+	        }
+		});
+	});
 }
 
 function closeConnection(){
@@ -234,4 +230,29 @@ function closeConnection(){
 function createTable(){
 	table = new Table({ chars: {'mid': '-', 'left-mid': '-', 'mid-mid': '-', 'right-mid': '-'} });
 	table.push(["Item ID", "Product Name", "Department Name", "Price", "Quantity"]);
+}
+
+function updateDepartmentTable(){
+	connection.query(
+		"SELECT departments.department_name AS department_name, departments.department_id AS department_id, products.department_id AS products_department_id, products.department_name AS products_department_name FROM departments RIGHT JOIN products ON products.department_name = departments.department_name",
+		function(err, departments){
+			for(var i = 0; i < departments.length; i++){
+				var deparmentLoc = departments[i];
+				if(deparmentLoc.products_department_id.toString() == "NULL"){
+					if(deparmentLoc.department_id.toString() == "NULL" && deparmentLoc.department_name.toString() == "NULL"){
+						connection.query(
+							"INSERT INTO departments SET department_name = " + deparmentLoc.products_department_name ,
+							function(err){
+								connection.query("UPDATE products INNER JOIN departments ON (departments.department_name = products.department_name) SET products.department_id = departments.department_id", function(err){
+									if(err) throw err;
+								});
+						});
+					}else {
+						connection.query("UPDATE products INNER JOIN departments ON (departments.department_name = products.department_name) SET products.department_id = departments.department_id", function(err){
+							if(err) throw err;
+						});
+					}
+				}
+			}
+	});
 }
